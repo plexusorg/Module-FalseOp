@@ -5,11 +5,13 @@ import dev.plex.module.PlexModule;
 import dev.plex.util.PlexLog;
 import org.bukkit.Bukkit;
 
-public class FalseOp extends PlexModule {
-
+public class FalseOp extends PlexModule
+{
     @Override
-    public void enable() {
-        if (!Bukkit.getPluginManager().isPluginEnabled("ProtocolLib")) {
+    public void enable()
+    {
+        if (!Bukkit.getPluginManager().isPluginEnabled("ProtocolLib"))
+        {
             PlexLog.error("The Plex-FalseOp module requires the ProtocolLib plugin to work.");
             return;
         }
@@ -17,7 +19,7 @@ public class FalseOp extends PlexModule {
     }
 
     @Override
-    public void disable() {
-        //
+    public void disable()
+    {
     }
 }

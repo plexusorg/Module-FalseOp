@@ -1,0 +1,4 @@
+name: Module-FalseOp
+main: dev.plex.FalseOp
+description: Make clients think they have OP!
+version: 1.0

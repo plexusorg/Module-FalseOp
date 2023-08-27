@@ -19,7 +19,6 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
@@ -27,19 +26,30 @@ import org.bukkit.util.Vector;
 public class PlayerListener extends PlexListener
 {
     private final ProtocolManager protocolManager;
+    private final PacketListener packetListener;
 
     public PlayerListener()
     {
         protocolManager = ProtocolLibrary.getProtocolManager();
+        packetListener = new PacketAdapter(plugin, ListenerPriority.NORMAL, PacketType.Play.Server.ENTITY_STATUS)
+        {
+            @Override
+            public void onPacketSending(PacketEvent event)
+            {
+                PacketContainer packet = event.getPacket();
+                byte b;
+                if (packet.getIntegers().getValues().get(0) == event.getPlayer().getEntityId() && (b = packet.getBytes().getValues().get(0)) >= (byte) 24 && b <= (byte) 27)
+                {
+                    packet.getBytes().write(0, (byte) 28);
+                }
+            }
+        };
+        protocolManager.addPacketListener(packetListener);
     }
 
-    @EventHandler
-    public void onJoin(PlayerJoinEvent event)
+    public void cleanUp()
     {
-        PacketContainer packet = new PacketContainer(PacketType.Play.Server.ENTITY_STATUS);
-        packet.getIntegers().write(0, event.getPlayer().getEntityId());
-        packet.getBytes().write(0, (byte) 28);
-        protocolManager.sendServerPacket(event.getPlayer(), packet);
+        protocolManager.removePacketListener(packetListener);
     }
 
     @EventHandler

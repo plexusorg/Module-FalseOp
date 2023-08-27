@@ -7,6 +7,8 @@ import org.bukkit.Bukkit;
 
 public class FalseOp extends PlexModule
 {
+    private PlayerListener playerListener;
+
     @Override
     public void enable()
     {
@@ -15,11 +17,17 @@ public class FalseOp extends PlexModule
             PlexLog.error("The Plex-FalseOp module requires the ProtocolLib plugin to work.");
             return;
         }
-        registerListener(new PlayerListener());
+        playerListener = new PlayerListener();
+        registerListener(playerListener);
     }
 
     @Override
     public void disable()
     {
+        if (playerListener != null)
+        {
+            playerListener.cleanUp();
+            playerListener = null;
+        }
     }
 }

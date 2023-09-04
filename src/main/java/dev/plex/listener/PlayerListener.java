@@ -36,6 +36,10 @@ public class PlayerListener extends PlexListener
             @Override
             public void onPacketSending(PacketEvent event)
             {
+                if (event.isPlayerTemporary())
+                {
+                    return;
+                }
                 PacketContainer packet = event.getPacket();
                 byte b;
                 if (packet.getIntegers().getValues().get(0) == event.getPlayer().getEntityId() && (b = packet.getBytes().getValues().get(0)) >= (byte) 24 && b <= (byte) 27)

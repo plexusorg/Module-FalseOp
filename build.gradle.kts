@@ -20,14 +20,14 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
-    compileOnly("dev.plex:server:1.3")
+    compileOnly("io.papermc.paper:paper-api:1.20.2-R0.1-SNAPSHOT")
+    compileOnly("dev.plex:server:1.4-SNAPSHOT")
     implementation("com.comphenix.protocol:ProtocolLib:5.1.0")
 }
 
 group = "dev.plex"
-version = "1.0"
-description = "ExampleModule"
+version = "1.4-SNAPSHOT"
+description = "Module-FalseOp"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
@@ -42,7 +42,7 @@ publishing {
 }
 
 tasks.getByName < Jar > ("jar") {
-    archiveBaseName.set("Plex-ExampleModule")
+    archiveBaseName.set("Module-FalseOp")
     archiveVersion.set("")
 }
 

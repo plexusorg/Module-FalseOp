@@ -20,17 +20,17 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.20.2-R0.1-SNAPSHOT")
-    compileOnly("dev.plex:server:1.4-SNAPSHOT")
-    implementation("com.comphenix.protocol:ProtocolLib:5.1.0")
+    compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
+    compileOnly("dev.plex:server:1.5-SNAPSHOT")
+    implementation("com.comphenix.protocol:ProtocolLib:5.3.0-SNAPSHOT")
 }
 
 group = "dev.plex"
-version = "1.4-SNAPSHOT"
+version = "1.5-SNAPSHOT"
 description = "Module-FalseOp"
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 publishing {

@@ -4,6 +4,9 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.*;
+import io.papermc.paper.datacomponent.DataComponentType;
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.ItemAdventurePredicate;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -27,6 +30,8 @@ public class PlayerListener extends PlexListener
 {
     private final ProtocolManager protocolManager;
     private final PacketListener packetListener;
+    public static final DataComponentType.Valued<ItemAdventurePredicate> CAN_PLACE_ON = valued("can_place_on");
+
 
     public PlayerListener()
     {
@@ -80,8 +85,8 @@ public class PlayerListener extends PlexListener
                 ItemMeta meta = item.getItemMeta();
                 if (meta != null)
                 {
-                    canPlace = meta.getPlaceableKeys().contains(clicked.getType().getKey());
-                    canBreak = meta.getDestroyableKeys().contains(clicked.getType().getKey());
+                    canPlace = item.hasData(DataComponentTypes.CAN_PLACE_ON);
+                    canBreak = item.hasData(DataComponentTypes.CAN_BREAK);
                 }
             }
         }

@@ -78,9 +78,22 @@ public class PlayerListener extends PlexListener
             ItemStack item = event.getItem();
             if (item != null)
             {
-                canPlace = item.getData(DataComponentTypes.CAN_PLACE_ON).predicates().stream().anyMatch(blockPredicate -> blockPredicate.blocks().contains((TypedKey<BlockType>) clicked.getType().asBlockType().getKey().key()));
-                canBreak = item.getData(DataComponentTypes.CAN_BREAK).predicates().stream().anyMatch(blockPredicate -> blockPredicate.blocks().contains((TypedKey<BlockType>) clicked.getType().asBlockType().getKey().key()));
-            }
+                canPlace = item.getData(DataComponentTypes.CAN_PLACE_ON).predicates().stream().anyMatch(blockPredicate -> {
+                    for (TypedKey<BlockType> key : blockPredicate.blocks()) {
+                        if (key.equals(clicked.getType().asBlockType().key())) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                canBreak = item.getData(DataComponentTypes.CAN_BREAK).predicates().stream().anyMatch(blockPredicate -> {
+                    for (TypedKey<BlockType> key : blockPredicate.blocks()) {
+                        if (key.equals(clicked.getType().asBlockType().key())) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });            }
         }
         boolean clickedTargetBlock = clicked.getType() == Material.COMMAND_BLOCK || clicked.getType() == Material.CHAIN_COMMAND_BLOCK || clicked.getType() == Material.REPEATING_COMMAND_BLOCK || clicked.getType() == Material.STRUCTURE_BLOCK || clicked.getType() == Material.JIGSAW;
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK && (type == Material.COMMAND_BLOCK || type == Material.CHAIN_COMMAND_BLOCK || type == Material.REPEATING_COMMAND_BLOCK || type == Material.STRUCTURE_BLOCK || type == Material.JIGSAW) && (!clickedTargetBlock || player.isSneaking()))

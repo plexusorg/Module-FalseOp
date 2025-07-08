@@ -4,18 +4,17 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.*;
-import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.ItemAdventurePredicate;
+import io.papermc.paper.registry.TypedKey;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockType;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
-import org.bukkit.enchantments.EnchantmentTarget;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
@@ -23,15 +22,12 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
 public class PlayerListener extends PlexListener
 {
     private final ProtocolManager protocolManager;
     private final PacketListener packetListener;
-    public static final DataComponentType.Valued<ItemAdventurePredicate> CAN_PLACE_ON = valued("can_place_on");
-
 
     public PlayerListener()
     {
@@ -47,7 +43,7 @@ public class PlayerListener extends PlexListener
                 }
                 PacketContainer packet = event.getPacket();
                 byte b;
-                if (packet.getIntegers().getValues().get(0) == event.getPlayer().getEntityId() && (b = packet.getBytes().getValues().get(0)) >= (byte) 24 && b <= (byte) 27)
+                if (packet.getIntegers().getValues().getFirst() == event.getPlayer().getEntityId() && (b = packet.getBytes().getValues().getFirst()) >= (byte) 24 && b <= (byte) 27)
                 {
                     packet.getBytes().write(0, (byte) 28);
                 }
@@ -82,12 +78,8 @@ public class PlayerListener extends PlexListener
             ItemStack item = event.getItem();
             if (item != null)
             {
-                ItemMeta meta = item.getItemMeta();
-                if (meta != null)
-                {
-                    canPlace = item.hasData(DataComponentTypes.CAN_PLACE_ON);
-                    canBreak = item.hasData(DataComponentTypes.CAN_BREAK);
-                }
+                canPlace = item.getData(DataComponentTypes.CAN_PLACE_ON).predicates().stream().anyMatch(blockPredicate -> blockPredicate.blocks().contains((TypedKey<BlockType>) clicked.getType().asBlockType().getKey().key()));
+                canBreak = item.getData(DataComponentTypes.CAN_BREAK).predicates().stream().anyMatch(blockPredicate -> blockPredicate.blocks().contains((TypedKey<BlockType>) clicked.getType().asBlockType().getKey().key()));
             }
         }
         boolean clickedTargetBlock = clicked.getType() == Material.COMMAND_BLOCK || clicked.getType() == Material.CHAIN_COMMAND_BLOCK || clicked.getType() == Material.REPEATING_COMMAND_BLOCK || clicked.getType() == Material.STRUCTURE_BLOCK || clicked.getType() == Material.JIGSAW;
@@ -140,7 +132,7 @@ public class PlayerListener extends PlexListener
             {
                 return;
             }
-            if (event.getItem() != null && (EnchantmentTarget.WEAPON.includes(event.getItem().getType()) || event.getItem().getType() == Material.DEBUG_STICK || event.getItem().getType() == Material.TRIDENT))
+            if (event.getItem() != null && (Tag.ITEMS_SWORDS.isTagged(event.getItem().getType()) || event.getItem().getType() == Material.DEBUG_STICK || event.getItem().getType() == Material.TRIDENT))
             {
                 return;
             }
@@ -192,8 +184,11 @@ public class PlayerListener extends PlexListener
     {
         return switch (material)
         {
-            case BREWING_STAND, CAKE, CHEST, HOPPER, TRAPPED_CHEST, ENDER_CHEST, CAULDRON, COMMAND_BLOCK, REPEATING_COMMAND_BLOCK, CHAIN_COMMAND_BLOCK, BEACON, REPEATER, COMPARATOR, BARREL, DISPENSER, DROPPER, LEVER, CRAFTING_TABLE, CARTOGRAPHY_TABLE, SMITHING_TABLE, ENCHANTING_TABLE, FLETCHING_TABLE, BLAST_FURNACE, LOOM, GRINDSTONE, FURNACE, STONECUTTER, BELL, DAYLIGHT_DETECTOR, JIGSAW, STRUCTURE_BLOCK ->
-                    true;
+            case BREWING_STAND, CAKE, CHEST, HOPPER, TRAPPED_CHEST, ENDER_CHEST, CAULDRON, COMMAND_BLOCK,
+                 REPEATING_COMMAND_BLOCK, CHAIN_COMMAND_BLOCK, BEACON, REPEATER, COMPARATOR, BARREL, DISPENSER, DROPPER,
+                 LEVER, CRAFTING_TABLE, CARTOGRAPHY_TABLE, SMITHING_TABLE, ENCHANTING_TABLE, FLETCHING_TABLE,
+                 BLAST_FURNACE, LOOM, GRINDSTONE, FURNACE, STONECUTTER, BELL, DAYLIGHT_DETECTOR, JIGSAW,
+                 STRUCTURE_BLOCK -> true;
             default ->
                     Tag.SIGNS.isTagged(material) || Tag.BEDS.isTagged(material) || Tag.BUTTONS.isTagged(material) || Tag.TRAPDOORS.isTagged(material) || Tag.WOODEN_DOORS.isTagged(material) || Tag.SHULKER_BOXES.isTagged(material) || Tag.ANVIL.isTagged(material) || Tag.FENCE_GATES.isTagged(material);
         };

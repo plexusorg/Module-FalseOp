@@ -78,22 +78,28 @@ public class PlayerListener extends PlexListener
             ItemStack item = event.getItem();
             if (item != null)
             {
-                canPlace = item.getData(DataComponentTypes.CAN_PLACE_ON).predicates().stream().anyMatch(blockPredicate -> {
-                    for (TypedKey<BlockType> key : blockPredicate.blocks()) {
-                        if (key.equals(clicked.getType().asBlockType().key())) {
-                            return true;
+                if (item.hasData(DataComponentTypes.CAN_PLACE_ON)) {
+                    canPlace = item.getData(DataComponentTypes.CAN_PLACE_ON).predicates().stream().anyMatch(blockPredicate -> {
+                        for (TypedKey<BlockType> key : blockPredicate.blocks()) {
+                            if (key.key().equals(clicked.getType().asBlockType().key())) {
+                                return true;
+                            }
                         }
-                    }
-                    return false;
-                });
-                canBreak = item.getData(DataComponentTypes.CAN_BREAK).predicates().stream().anyMatch(blockPredicate -> {
-                    for (TypedKey<BlockType> key : blockPredicate.blocks()) {
-                        if (key.equals(clicked.getType().asBlockType().key())) {
-                            return true;
+                        return false;
+                    });
+                }
+
+                if (item.hasData(DataComponentTypes.CAN_BREAK)) {
+                    canBreak = item.getData(DataComponentTypes.CAN_BREAK).predicates().stream().anyMatch(blockPredicate -> {
+                        for (TypedKey<BlockType> key : blockPredicate.blocks()) {
+                            if (key.key().equals(clicked.getType().asBlockType().key())) {
+                                return true;
+                            }
                         }
-                    }
-                    return false;
-                });            }
+                        return false;
+                    });
+                }
+            }
         }
         boolean clickedTargetBlock = clicked.getType() == Material.COMMAND_BLOCK || clicked.getType() == Material.CHAIN_COMMAND_BLOCK || clicked.getType() == Material.REPEATING_COMMAND_BLOCK || clicked.getType() == Material.STRUCTURE_BLOCK || clicked.getType() == Material.JIGSAW;
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK && (type == Material.COMMAND_BLOCK || type == Material.CHAIN_COMMAND_BLOCK || type == Material.REPEATING_COMMAND_BLOCK || type == Material.STRUCTURE_BLOCK || type == Material.JIGSAW) && (!clickedTargetBlock || player.isSneaking()))

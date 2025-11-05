@@ -20,13 +20,13 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
-    compileOnly("dev.plex:server:1.5")
-    implementation("com.comphenix.protocol:ProtocolLib:5.3.0")
+    compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
+    compileOnly("dev.plex:server:1.6")
+    implementation("com.comphenix.protocol:ProtocolLib:5.4.0-SNAPSHOT")
 }
 
 group = "dev.plex"
-version = "1.5"
+version = "1.6"
 description = "Module-FalseOp"
 
 java {

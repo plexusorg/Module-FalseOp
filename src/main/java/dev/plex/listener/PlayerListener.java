@@ -24,6 +24,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
+@SuppressWarnings("UnstableApiUsage")
 public class PlayerListener extends PlexListener
 {
     private final ProtocolManager protocolManager;

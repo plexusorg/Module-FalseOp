@@ -22,7 +22,7 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
     compileOnly("dev.plex:server:1.6")
-    implementation("com.comphenix.protocol:ProtocolLib:5.4.0-SNAPSHOT")
+    implementation("com.comphenix.protocol:ProtocolLib:5.3.0")
 }
 
 group = "dev.plex"

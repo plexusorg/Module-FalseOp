@@ -12,17 +12,13 @@ repositories {
         url = uri("https://nexus.telesphoreo.me/repository/plex/")
     }
 
-    maven {
-        url = uri("https://repo.dmulloy2.net/repository/public/")
-    }
-
     mavenCentral()
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     compileOnly("dev.plex:server:1.6")
-    implementation("com.comphenix.protocol:ProtocolLib:5.3.0")
+    implementation("net.dmulloy2:ProtocolLib:5.4.0")
 }
 
 group = "dev.plex"

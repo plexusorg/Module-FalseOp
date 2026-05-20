@@ -1,4 +1,5 @@
 name: Module-FalseOp
 main: dev.plex.FalseOp
 description: Make clients think they have OP!
-version: 1.6
+version: 2.0-SNAPSHOT
+apiCompatibility: 1

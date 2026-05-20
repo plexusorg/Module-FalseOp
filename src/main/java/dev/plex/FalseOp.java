@@ -2,7 +2,6 @@ package dev.plex;
 
 import dev.plex.listener.PlayerListener;
 import dev.plex.module.PlexModule;
-import dev.plex.util.PlexLog;
 import org.bukkit.Bukkit;
 
 public class FalseOp extends PlexModule
@@ -12,9 +11,9 @@ public class FalseOp extends PlexModule
     @Override
     public void enable()
     {
-        if (!Bukkit.getPluginManager().isPluginEnabled("ProtocolLib"))
+        if (!Bukkit.getPluginManager().isPluginEnabled("packetevents"))
         {
-            PlexLog.error("The Plex-FalseOp module requires the ProtocolLib plugin to work.");
+            api().logging().error("The FalseOp module requires the PacketEvents plugin to work.");
             return;
         }
         playerListener = new PlayerListener();

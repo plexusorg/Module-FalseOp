@@ -1,11 +1,15 @@
 package dev.plex.listener;
 
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.ProtocolManager;
-import com.comphenix.protocol.events.*;
+import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.event.PacketListener;
+import com.github.retrooper.packetevents.event.PacketListenerCommon;
+import com.github.retrooper.packetevents.event.PacketListenerPriority;
+import com.github.retrooper.packetevents.event.PacketSendEvent;
+import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityStatus;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.registry.TypedKey;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -15,6 +19,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockType;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
@@ -27,35 +32,40 @@ import org.bukkit.util.Vector;
 @SuppressWarnings("UnstableApiUsage")
 public class PlayerListener extends PlexListener
 {
-    private final ProtocolManager protocolManager;
-    private final PacketListener packetListener;
+    private final PacketListenerCommon packetListener;
 
     public PlayerListener()
     {
-        protocolManager = ProtocolLibrary.getProtocolManager();
-        packetListener = new PacketAdapter(plugin, ListenerPriority.NORMAL, PacketType.Play.Server.ENTITY_STATUS)
+        packetListener = PacketEvents.getAPI().getEventManager().registerListener(new PacketListener()
         {
             @Override
-            public void onPacketSending(PacketEvent event)
+            public void onPacketSend(PacketSendEvent event)
             {
-                if (event.isPlayerTemporary())
+                if (event.getPacketType() != PacketType.Play.Server.ENTITY_STATUS)
                 {
                     return;
                 }
-                PacketContainer packet = event.getPacket();
-                byte b;
-                if (packet.getIntegers().getValues().getFirst() == event.getPlayer().getEntityId() && (b = packet.getBytes().getValues().getFirst()) >= (byte) 24 && b <= (byte) 27)
+
+                WrapperPlayServerEntityStatus packet = new WrapperPlayServerEntityStatus(event);
+                Player player = event.getPlayer();
+                if (player == null)
                 {
-                    packet.getBytes().write(0, (byte) 28);
+                    return;
+                }
+
+                int status = packet.getStatus();
+                if (packet.getEntityId() == player.getEntityId() && status >= 24 && status <= 27)
+                {
+                    packet.setStatus(28);
+                    event.markForReEncode(true);
                 }
             }
-        };
-        protocolManager.addPacketListener(packetListener);
+        }, PacketListenerPriority.NORMAL);
     }
 
     public void cleanUp()
     {
-        protocolManager.removePacketListener(packetListener);
+        PacketEvents.getAPI().getEventManager().unregisterListener(packetListener);
     }
 
     @EventHandler
@@ -79,10 +89,14 @@ public class PlayerListener extends PlexListener
             ItemStack item = event.getItem();
             if (item != null)
             {
-                if (item.hasData(DataComponentTypes.CAN_PLACE_ON)) {
-                    canPlace = item.getData(DataComponentTypes.CAN_PLACE_ON).predicates().stream().anyMatch(blockPredicate -> {
-                        for (TypedKey<BlockType> key : blockPredicate.blocks()) {
-                            if (key.key().equals(clicked.getType().asBlockType().key())) {
+                if (item.hasData(DataComponentTypes.CAN_PLACE_ON))
+                {
+                    canPlace = item.getData(DataComponentTypes.CAN_PLACE_ON).predicates().stream().anyMatch(blockPredicate ->
+                    {
+                        for (TypedKey<BlockType> key : blockPredicate.blocks())
+                        {
+                            if (key.key().equals(clicked.getType().asBlockType().key()))
+                            {
                                 return true;
                             }
                         }
@@ -90,10 +104,14 @@ public class PlayerListener extends PlexListener
                     });
                 }
 
-                if (item.hasData(DataComponentTypes.CAN_BREAK)) {
-                    canBreak = item.getData(DataComponentTypes.CAN_BREAK).predicates().stream().anyMatch(blockPredicate -> {
-                        for (TypedKey<BlockType> key : blockPredicate.blocks()) {
-                            if (key.key().equals(clicked.getType().asBlockType().key())) {
+                if (item.hasData(DataComponentTypes.CAN_BREAK))
+                {
+                    canBreak = item.getData(DataComponentTypes.CAN_BREAK).predicates().stream().anyMatch(blockPredicate ->
+                    {
+                        for (TypedKey<BlockType> key : blockPredicate.blocks())
+                        {
+                            if (key.key().equals(clicked.getType().asBlockType().key()))
+                            {
                                 return true;
                             }
                         }
@@ -133,7 +151,7 @@ public class PlayerListener extends PlexListener
                 block.setBlockData(directional);
             }
             BlockPlaceEvent placeEvent = new BlockPlaceEvent(block, block.getState(), clicked, event.getItem(), player, true, player.getHandRaised());
-            plugin.getServer().getPluginManager().callEvent(placeEvent);
+            Bukkit.getPluginManager().callEvent(placeEvent);
             if (placeEvent.isCancelled())
             {
                 block.setType(oldType);
@@ -157,7 +175,7 @@ public class PlayerListener extends PlexListener
                 return;
             }
             BlockBreakEvent breakEvent = new BlockBreakEvent(clicked, player);
-            plugin.getServer().getPluginManager().callEvent(breakEvent);
+            Bukkit.getPluginManager().callEvent(breakEvent);
             if (breakEvent.isCancelled())
             {
                 return;

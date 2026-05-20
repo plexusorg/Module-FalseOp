@@ -12,21 +12,25 @@ repositories {
         url = uri("https://nexus.telesphoreo.me/repository/plex/")
     }
 
+    maven {
+        url = uri("https://repo.codemc.io/repository/maven-releases/")
+    }
+
     mavenCentral()
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
-    compileOnly("dev.plex:server:1.6")
-    implementation("net.dmulloy2:ProtocolLib:5.4.0")
+    compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
+    compileOnly("dev.plex:api:2.0-SNAPSHOT")
+    compileOnly("com.github.retrooper:packetevents-spigot:2.12.1")
 }
 
 group = "dev.plex"
-version = "1.6"
+version = "2.0-SNAPSHOT"
 description = "Module-FalseOp"
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
 publishing {
@@ -37,7 +41,7 @@ publishing {
     }
 }
 
-tasks.getByName < Jar > ("jar") {
+tasks.getByName<Jar>("jar") {
     archiveBaseName.set("Module-FalseOp")
     archiveVersion.set("")
 }

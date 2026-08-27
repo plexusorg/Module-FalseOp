@@ -22,6 +22,7 @@ import org.bukkit.block.data.Directional;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -30,7 +31,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 @SuppressWarnings("UnstableApiUsage")
-public class PlayerListener extends PlexListener
+public class PlayerListener implements Listener
 {
     private final PacketListenerCommon packetListener;
 

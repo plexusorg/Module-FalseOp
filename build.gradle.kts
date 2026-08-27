@@ -22,7 +22,7 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.2.build.+")
     compileOnly("dev.plex:api:2.0-SNAPSHOT")
-    compileOnly("com.github.retrooper:packetevents-spigot:2.12.1")
+    compileOnly("com.github.retrooper:packetevents-spigot:2.13.0")
 }
 
 group = "dev.plex"

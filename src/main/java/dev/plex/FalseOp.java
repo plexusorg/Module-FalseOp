@@ -13,8 +13,7 @@ public class FalseOp extends PlexModule
     {
         if (!Bukkit.getPluginManager().isPluginEnabled("packetevents"))
         {
-            api().logging().error("The FalseOp module requires the PacketEvents plugin to work.");
-            return;
+            throw new IllegalStateException("The FalseOp module requires the PacketEvents plugin to work.");
         }
         playerListener = new PlayerListener();
         registerListener(playerListener);

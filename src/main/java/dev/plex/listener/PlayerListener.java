@@ -8,7 +8,11 @@ import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityStatus;
 import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.DataComponentType;
+import io.papermc.paper.datacomponent.item.ItemAdventurePredicate;
 import io.papermc.paper.registry.TypedKey;
+import java.util.EnumSet;
+import java.util.Set;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -33,6 +37,9 @@ import org.bukkit.util.Vector;
 @SuppressWarnings("UnstableApiUsage")
 public class PlayerListener implements Listener
 {
+    private static final Set<Material> TARGET_BLOCKS = EnumSet.of(Material.COMMAND_BLOCK, Material.CHAIN_COMMAND_BLOCK,
+            Material.REPEATING_COMMAND_BLOCK, Material.STRUCTURE_BLOCK, Material.JIGSAW);
+
     private final PacketListenerCommon packetListener;
 
     public PlayerListener()
@@ -76,113 +83,124 @@ public class PlayerListener implements Listener
         {
             return;
         }
-        var type = event.getMaterial();
-        var player = event.getPlayer();
         Block clicked = event.getClickedBlock();
         if (clicked == null)
         {
             return;
         }
-        boolean canPlace = player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SURVIVAL;
-        boolean canBreak = player.getGameMode() == GameMode.CREATIVE;
-        if (player.getGameMode() == GameMode.ADVENTURE)
-        {
-            ItemStack item = event.getItem();
-            if (item != null)
-            {
-                if (item.hasData(DataComponentTypes.CAN_PLACE_ON))
-                {
-                    canPlace = item.getData(DataComponentTypes.CAN_PLACE_ON).predicates().stream().anyMatch(blockPredicate ->
-                    {
-                        for (TypedKey<BlockType> key : blockPredicate.blocks())
-                        {
-                            if (key.key().equals(clicked.getType().asBlockType().key()))
-                            {
-                                return true;
-                            }
-                        }
-                        return false;
-                    });
-                }
 
-                if (item.hasData(DataComponentTypes.CAN_BREAK))
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && TARGET_BLOCKS.contains(event.getMaterial()))
+        {
+            placeBlock(event, clicked);
+        }
+        else if (event.getAction() == Action.LEFT_CLICK_BLOCK && TARGET_BLOCKS.contains(clicked.getType()))
+        {
+            breakBlock(event, clicked);
+        }
+    }
+
+    private void placeBlock(PlayerInteractEvent event, Block clicked)
+    {
+        Player player = event.getPlayer();
+        if (TARGET_BLOCKS.contains(clicked.getType()) && !player.isSneaking())
+        {
+            return;
+        }
+        if (!canPlace(player, event.getItem(), clicked))
+        {
+            return;
+        }
+        if (isInteractable(clicked.getType()) && !player.isSneaking())
+        {
+            return;
+        }
+        Location loc = clicked.isReplaceable() ? clicked.getLocation() : clicked.getLocation().add(event.getBlockFace().getDirection());
+        Block block = loc.getBlock();
+        if (!block.isReplaceable())
+        {
+            return;
+        }
+        if (!block.getWorld().getNearbyEntities(block.getLocation().add(0.5, 0.5, 0.5), 0.5, 0.5, 0.5).isEmpty())
+        {
+            return;
+        }
+        Material oldType = block.getType();
+        BlockData oldData = block.getBlockData();
+        block.setType(event.getMaterial());
+        BlockFace face = calcVecBlockFace(player.getLocation().getDirection());
+        if (block.getBlockData() instanceof Directional directional)
+        {
+            directional.setFacing(face.getOppositeFace());
+            block.setBlockData(directional);
+        }
+        BlockPlaceEvent placeEvent = new BlockPlaceEvent(block, block.getState(), clicked, event.getItem(), player, true, player.getHandRaised());
+        Bukkit.getPluginManager().callEvent(placeEvent);
+        if (placeEvent.isCancelled())
+        {
+            block.setType(oldType);
+            block.setBlockData(oldData);
+            return;
+        }
+        if (player.getGameMode() != GameMode.CREATIVE && event.getItem() != null)
+        {
+            event.getItem().setAmount(event.getItem().getAmount() - 1);
+        }
+        player.closeInventory();
+    }
+
+    private void breakBlock(PlayerInteractEvent event, Block clicked)
+    {
+        Player player = event.getPlayer();
+        if (!canBreak(player, event.getItem(), clicked))
+        {
+            return;
+        }
+        if (event.getItem() != null && (Tag.ITEMS_SWORDS.isTagged(event.getItem().getType()) || event.getItem().getType() == Material.DEBUG_STICK || event.getItem().getType() == Material.TRIDENT))
+        {
+            return;
+        }
+        BlockBreakEvent breakEvent = new BlockBreakEvent(clicked, player);
+        Bukkit.getPluginManager().callEvent(breakEvent);
+        if (breakEvent.isCancelled())
+        {
+            return;
+        }
+        clicked.breakNaturally(event.getItem());
+    }
+
+    private boolean canPlace(Player player, ItemStack item, Block clicked)
+    {
+        return switch (player.getGameMode())
+        {
+            case CREATIVE, SURVIVAL -> true;
+            case ADVENTURE -> item != null && permits(item, clicked, DataComponentTypes.CAN_PLACE_ON);
+            default -> false;
+        };
+    }
+
+    private boolean canBreak(Player player, ItemStack item, Block clicked)
+    {
+        return player.getGameMode() == GameMode.CREATIVE
+                || player.getGameMode() == GameMode.ADVENTURE && item != null && permits(item, clicked, DataComponentTypes.CAN_BREAK);
+    }
+
+    private boolean permits(ItemStack item, Block clicked, DataComponentType.Valued<ItemAdventurePredicate> componentType)
+    {
+        if (!item.hasData(componentType))
+        {
+            return false;
+        }
+        for (var blockPredicate : item.getData(componentType).predicates())
+        {
+            for (TypedKey<BlockType> key : blockPredicate.blocks())
+            {
+                if (key.key().equals(clicked.getType().asBlockType().key()))
                 {
-                    canBreak = item.getData(DataComponentTypes.CAN_BREAK).predicates().stream().anyMatch(blockPredicate ->
-                    {
-                        for (TypedKey<BlockType> key : blockPredicate.blocks())
-                        {
-                            if (key.key().equals(clicked.getType().asBlockType().key()))
-                            {
-                                return true;
-                            }
-                        }
-                        return false;
-                    });
+                    return true;
                 }
             }
         }
-        boolean clickedTargetBlock = clicked.getType() == Material.COMMAND_BLOCK || clicked.getType() == Material.CHAIN_COMMAND_BLOCK || clicked.getType() == Material.REPEATING_COMMAND_BLOCK || clicked.getType() == Material.STRUCTURE_BLOCK || clicked.getType() == Material.JIGSAW;
-        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && (type == Material.COMMAND_BLOCK || type == Material.CHAIN_COMMAND_BLOCK || type == Material.REPEATING_COMMAND_BLOCK || type == Material.STRUCTURE_BLOCK || type == Material.JIGSAW) && (!clickedTargetBlock || player.isSneaking()))
-        {
-            if (!canPlace)
-            {
-                return;
-            }
-            if (isInteractable(clicked.getType()) && !player.isSneaking())
-            {
-                return;
-            }
-            Location loc = clicked.isReplaceable() ? clicked.getLocation() : clicked.getLocation().add(event.getBlockFace().getDirection());
-            Block block = loc.getBlock();
-            if (!block.isReplaceable())
-            {
-                return;
-            }
-            if (!block.getWorld().getNearbyEntities(block.getLocation().add(0.5, 0.5, 0.5), 0.5, 0.5, 0.5).isEmpty())
-            {
-                return;
-            }
-            Material oldType = block.getType();
-            BlockData oldData = block.getBlockData();
-            block.setType(type);
-            BlockFace face = calcVecBlockFace(player.getLocation().getDirection());
-            if (block.getBlockData() instanceof Directional directional)
-            {
-                directional.setFacing(face.getOppositeFace());
-                block.setBlockData(directional);
-            }
-            BlockPlaceEvent placeEvent = new BlockPlaceEvent(block, block.getState(), clicked, event.getItem(), player, true, player.getHandRaised());
-            Bukkit.getPluginManager().callEvent(placeEvent);
-            if (placeEvent.isCancelled())
-            {
-                block.setType(oldType);
-                block.setBlockData(oldData);
-                return;
-            }
-            if (player.getGameMode() != GameMode.CREATIVE && event.getItem() != null)
-            {
-                event.getItem().setAmount(event.getItem().getAmount() - 1);
-            }
-            player.closeInventory();
-        }
-        else if (event.getAction() == Action.LEFT_CLICK_BLOCK && clickedTargetBlock)
-        {
-            if (!canBreak)
-            {
-                return;
-            }
-            if (event.getItem() != null && (Tag.ITEMS_SWORDS.isTagged(event.getItem().getType()) || event.getItem().getType() == Material.DEBUG_STICK || event.getItem().getType() == Material.TRIDENT))
-            {
-                return;
-            }
-            BlockBreakEvent breakEvent = new BlockBreakEvent(clicked, player);
-            Bukkit.getPluginManager().callEvent(breakEvent);
-            if (breakEvent.isCancelled())
-            {
-                return;
-            }
-            clicked.breakNaturally(event.getItem());
-        }
+        return false;
     }
 
     private static BlockFace calcVecBlockFace(Vector vector)

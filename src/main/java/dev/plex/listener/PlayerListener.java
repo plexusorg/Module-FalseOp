@@ -20,6 +20,7 @@ import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.BlockType;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
@@ -126,6 +127,7 @@ public class PlayerListener implements Listener
         }
         Material oldType = block.getType();
         BlockData oldData = block.getBlockData();
+        BlockState replaced = block.getState();
         block.setType(event.getMaterial());
         BlockFace face = calcVecBlockFace(player.getLocation().getDirection());
         if (block.getBlockData() instanceof Directional directional)
@@ -133,7 +135,7 @@ public class PlayerListener implements Listener
             directional.setFacing(face.getOppositeFace());
             block.setBlockData(directional);
         }
-        BlockPlaceEvent placeEvent = new BlockPlaceEvent(block, block.getState(), clicked, event.getItem(), player, true, player.getHandRaised());
+        BlockPlaceEvent placeEvent = new BlockPlaceEvent(block, replaced, clicked, event.getItem(), player, true, player.getHandRaised());
         Bukkit.getPluginManager().callEvent(placeEvent);
         if (placeEvent.isCancelled())
         {
